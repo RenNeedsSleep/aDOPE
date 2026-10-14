@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { motion, MotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
+import React from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { CORE_TEAM_DATA } from '../data/mockData';
 import { CoreTeamMember } from '../types';
 
@@ -9,102 +9,176 @@ interface CoreTeamSectionProps {
   onImageLeave: (imageId: string) => void;
 }
 
-const CARD_ENTRANCES = [
-  { x: '-18vw', y: '18vh', rotate: -9 },
-  { x: '-8vw', y: '28vh', rotate: 6 },
-  { x: '9vw', y: '24vh', rotate: -5 },
-  { x: '19vw', y: '17vh', rotate: 8 },
-  { x: '-20vw', y: '9vh', rotate: 7 },
-  { x: '16vw', y: '11vh', rotate: -8 },
-  { x: '5vw', y: '30vh', rotate: 4 },
-];
+/**
+ * Maps each member's image to its natural aspect ratio so frames
+ * feel proportional rather than forcing every portrait into 4:3.
+ * Measured from actual files in /public.
+ */
+const NATURAL_RATIOS: Record<string, string> = {
+  '/krish-srk.jpeg': 'aspect-[9/16]',        // 720×1280 portrait
+  '/sohail.jpeg': 'aspect-[3/2]',             // 1280×853 landscape
+  '/secretary-siddhartha.jpeg': 'aspect-[3/2]',// 1280×854 landscape
+  '/akshit-bulusu.jpeg': 'aspect-[3/2]',      // 4080×2720 landscape
+  '/shyam-sunder-pabboju.png': 'aspect-square',// 640×640 square
+  '/sree-divya.png': 'aspect-square',          // 520×564 near-square
+};
 
 interface TeamCardProps {
   member: CoreTeamMember;
   index: number;
-  progress: MotionValue<number>;
   highlightedImageId: string | null;
   onImageEnter: (imageId: string) => void;
   onImageLeave: (imageId: string) => void;
 }
 
-const TeamCard: React.FC<TeamCardProps> = ({ member, index, progress, highlightedImageId, onImageEnter, onImageLeave }) => {
+const TeamCard: React.FC<TeamCardProps> = ({
+  member,
+  index,
+  highlightedImageId,
+  onImageEnter,
+  onImageLeave,
+}) => {
   const reduceMotion = useReducedMotion();
-  const entry = CARD_ENTRANCES[index % CARD_ENTRANCES.length];
-  const enterEnd = Math.min(0.68, 0.24 + index * 0.065);
-  const cardX = useTransform(progress, [0, enterEnd, 1], [entry.x, '0vw', '0vw']);
-  const cardY = useTransform(progress, [0, enterEnd, 1], [entry.y, '0vh', '0vh']);
-  const cardRotate = useTransform(progress, [0, enterEnd, 1], [entry.rotate, 0, 0]);
-  const cardScale = useTransform(progress, [0, enterEnd, 1], [0.62, 1, 1]);
-  const cardOpacity = useTransform(progress, [0, Math.max(0.12, enterEnd - 0.14)], [0, 1]);
-  const imageScale = useTransform(progress, [0, enterEnd, 1], [1.2, 1.04, 1]);
   const imageId = `team-${member.id}`;
   const isHighlighted = highlightedImageId === imageId;
+  const aspectClass = member.imageUrl
+    ? NATURAL_RATIOS[member.imageUrl] || 'aspect-[4/3]'
+    : 'aspect-[4/3]';
 
   return (
     <motion.article
-      onPointerEnter={() => window.matchMedia('(hover: hover)').matches && member.imageUrl && onImageEnter(imageId)}
-      onPointerLeave={() => window.matchMedia('(hover: hover)').matches && member.imageUrl && onImageLeave(imageId)}
-      onClick={() => window.matchMedia('(hover: none)').matches && member.imageUrl && onImageEnter(imageId)}
-      className="group relative min-w-0 overflow-hidden border border-white/15 bg-black p-2.5 shadow-[0_20px_48px_rgba(0,0,0,.25)] sm:p-3"
-      style={reduceMotion ? undefined : { x: cardX, y: cardY, rotate: cardRotate, scale: cardScale, opacity: cardOpacity }}
+      initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.55, delay: index * 0.07, ease: [0.16, 1, 0.3, 1] }}
+      onPointerEnter={() =>
+        window.matchMedia('(hover: hover)').matches && member.imageUrl && onImageEnter(imageId)
+      }
+      onPointerLeave={() =>
+        window.matchMedia('(hover: hover)').matches && member.imageUrl && onImageLeave(imageId)
+      }
+      onClick={() =>
+        window.matchMedia('(hover: none)').matches && member.imageUrl && onImageEnter(imageId)
+      }
+      className="group relative flex flex-col rounded-xl border border-white/12 bg-neutral-950/80 shadow-[0_16px_44px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-white/40 hover:shadow-[0_24px_52px_rgba(255,255,255,0.04)] overflow-hidden"
     >
-      <div className="absolute left-0 top-0 h-px w-9 bg-white/55" />
-      <div className="absolute bottom-0 right-0 h-9 w-px bg-white/25" />
-      <div className="relative aspect-[4/3] overflow-hidden bg-black">
+      {/* Natural-ratio portrait frame */}
+      <div
+        className={`relative w-full overflow-hidden bg-neutral-900 ${aspectClass}`}
+      >
         {member.imageUrl ? (
-          <motion.img
+          <img
             src={member.imageUrl}
             alt={member.name}
-            className="h-full w-full object-cover object-top"
-            style={{ scale: reduceMotion ? 1 : imageScale, filter: isHighlighted ? 'none' : 'grayscale(1) contrast(1.06)' }}
+            className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            style={{
+              filter: isHighlighted
+                ? 'none'
+                : 'grayscale(0.8) contrast(1.08) brightness(0.9)',
+            }}
           />
         ) : (
-          <div className="relative grid h-full place-items-center overflow-hidden bg-black border border-white/10">
-            <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-neutral-500">Next face</span>
+          <div className="grid h-full place-items-center bg-neutral-900">
+            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-neutral-500">
+              Core Team
+            </span>
           </div>
         )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(0deg,rgba(0,0,0,.88),rgba(0,0,0,.28),transparent)] px-2.5 pb-2.5 pt-8 sm:px-3 sm:pb-3">
-          <span className="block font-mono text-[7px] uppercase tracking-[0.15em] text-white/64 sm:text-[8px]">{member.role}</span>
-          <h3 className="mt-1 text-sm font-bold leading-[.95] tracking-[-0.045em] text-white sm:text-base">{member.name || 'Incoming'}</h3>
-        </div>
-        <span className="absolute left-2 top-2 border border-white/20 bg-black/45 px-1.5 py-1 font-mono text-[7px] uppercase tracking-[0.14em] text-white/75 backdrop-blur-sm">{String(index + 1).padStart(2, '0')}</span>
+
+        {/* Index badge */}
+        <span className="absolute left-3 top-3 rounded-md border border-white/20 bg-black/65 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+
+        {/* Bottom gradient for readability */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
       </div>
-      {member.bio && <p className="mt-2 hidden border-t border-white/10 pt-2 text-[10px] leading-snug text-neutral-500 xl:block">{member.bio}</p>}
+
+      {/* Details below photo */}
+      <div className="flex flex-col gap-1.5 px-5 py-4 sm:px-6 sm:py-5">
+        <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-neutral-400 sm:text-[10px]">
+          {member.role}
+        </span>
+        <h3 className="text-lg font-bold tracking-tight text-white sm:text-xl lg:text-2xl">
+          {member.name}
+        </h3>
+        {member.bio && (
+          <p className="mt-1 text-xs leading-relaxed text-neutral-400 sm:text-sm line-clamp-3">
+            {member.bio}
+          </p>
+        )}
+      </div>
     </motion.article>
   );
 };
 
-/** Faces assemble from a loose constellation into a still, legible contact sheet. */
-export const CoreTeamSection: React.FC<CoreTeamSectionProps> = ({ highlightedImageId, onImageEnter, onImageLeave }) => {
-  const sectionRef = useRef<HTMLElement>(null);
+export const CoreTeamSection: React.FC<CoreTeamSectionProps> = ({
+  highlightedImageId,
+  onImageEnter,
+  onImageLeave,
+}) => {
   const reduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
-  const progress = useSpring(scrollYProgress, { stiffness: 92, damping: 26, mass: 0.34 });
-  const ruleScale = useTransform(progress, [0, 0.5], [0, 1]);
-  const readoutOpacity = useTransform(progress, [0.45, 0.74], [0, 1]);
+  const teamMembers = CORE_TEAM_DATA.filter((m) => m.name && m.name.trim() !== '');
 
   return (
-    <section ref={sectionRef} id="team" className="relative z-20 h-[205svh] overflow-clip border-b border-white/10 bg-black sm:h-[190svh]">
-      <div className="sticky top-0 h-[100svh] min-h-[520px] overflow-hidden bg-black sm:min-h-[650px]">
-        <div className="relative mx-auto flex h-full max-w-[1440px] flex-col px-4 pb-5 pt-16 sm:px-6 sm:pb-8 sm:pt-20 md:px-16">
-          <div className="relative z-10 flex shrink-0 flex-col justify-between gap-5 sm:flex-row sm:items-end">
-            <div>
-              <span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.21em] text-neutral-500 sm:text-[10px]">03 // Core team / 2026</span>
-              <h2 className="max-w-[14ch] text-[clamp(2.35rem,5.2vw,5.8rem)] font-extrabold uppercase leading-[0.85] tracking-[-0.06em] text-white">The people behind aDOPE</h2>
-            </div>
-            <p className="max-w-sm text-xs leading-relaxed text-neutral-400 sm:pb-1 sm:text-sm">A contact sheet of the organisers, designers, and mentors turning campus moments into aDOPE work.</p>
+    <section
+      id="team"
+      className="relative z-20 border-b border-white/10 bg-black py-20 sm:py-28 md:py-32"
+    >
+      <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 md:px-16">
+        {/* Header */}
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end mb-10 sm:mb-14">
+          <div>
+            <motion.span
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              className="mb-2 block font-mono text-[9px] uppercase tracking-[0.21em] text-neutral-500 sm:text-[10px]"
+            >
+              04 // Core team / 2026
+            </motion.span>
+            <motion.h2
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ delay: 0.08 }}
+              className="text-2xl font-extrabold uppercase tracking-[-0.06em] text-white sm:text-4xl md:text-5xl"
+            >
+              The people behind aDOPE
+            </motion.h2>
           </div>
+          <motion.p
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ delay: 0.15 }}
+            className="max-w-md text-xs leading-relaxed text-neutral-400 sm:text-sm"
+          >
+            The organisers, designers, and faculty mentors turning campus moments into lasting design work.
+          </motion.p>
+        </div>
 
-          <motion.div className="mt-5 h-px origin-left bg-white/45 sm:mt-7" style={reduceMotion ? { scaleX: 1 } : { scaleX: ruleScale }} />
-          <div className="relative mt-4 grid min-h-0 flex-1 grid-cols-3 content-center gap-2 sm:mt-6 sm:gap-3 lg:grid-cols-4 lg:gap-4">
-            {CORE_TEAM_DATA.map((member, index) => (
-              <TeamCard key={member.id} member={member} index={index} progress={progress} highlightedImageId={highlightedImageId} onImageEnter={onImageEnter} onImageLeave={onImageLeave} />
-            ))}
-          </div>
-          <motion.div className="mt-3 flex shrink-0 items-center justify-between font-mono text-[8px] uppercase tracking-[0.18em] text-neutral-600 sm:mt-4 sm:text-[9px]" style={reduceMotion ? undefined : { opacity: readoutOpacity }}>
-            <span>Collective direction / MGIT</span><span>7 points / one studio</span>
-          </motion.div>
+        {/* Divider */}
+        <div className="mb-10 sm:mb-14 h-px bg-white/15" />
+
+        {/* Masonry-style grid using CSS columns for natural aspect ratios */}
+        <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 sm:gap-7 lg:gap-8 [&>*]:mb-6 sm:[&>*]:mb-7 lg:[&>*]:mb-8 [&>*]:break-inside-avoid">
+          {teamMembers.map((member, index) => (
+            <TeamCard
+              key={member.id}
+              member={member}
+              index={index}
+              highlightedImageId={highlightedImageId}
+              onImageEnter={onImageEnter}
+              onImageLeave={onImageLeave}
+            />
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-12 sm:mt-16 flex items-center justify-between border-t border-white/10 pt-6 font-mono text-[8px] uppercase tracking-[0.2em] text-neutral-500 sm:text-[9px]">
+          <span>Collective Direction // MGIT Hyderabad</span>
+          <span>{teamMembers.length} Leaders // One Studio</span>
         </div>
       </div>
     </section>
