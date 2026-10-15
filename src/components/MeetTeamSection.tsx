@@ -8,7 +8,7 @@ const PIXEL_TILE_COUNT = 12 * 8;
 const PIXEL_COLUMN_COUNT = 12;
 const PIXEL_ROW_COUNT = 8;
 
-const createColumnRevealOrder = (): number[] => {
+const createRowRevealDelays = (): number[] => {
   let seed = 0x4d474954;
   const random = () => {
     seed ^= seed << 13;
@@ -16,20 +16,20 @@ const createColumnRevealOrder = (): number[] => {
     seed ^= seed << 5;
     return (seed >>> 0) / 0x100000000;
   };
-  const columnOrder = Array.from({ length: PIXEL_COLUMN_COUNT }, (_, column) => column);
-  for (let index = columnOrder.length - 1; index > 0; index--) {
+  const rowOrder = Array.from({ length: PIXEL_ROW_COUNT }, (_, row) => row);
+  for (let index = rowOrder.length - 1; index > 0; index--) {
     const swapIndex = Math.floor(random() * (index + 1));
-    [columnOrder[index], columnOrder[swapIndex]] = [columnOrder[swapIndex], columnOrder[index]];
+    [rowOrder[index], rowOrder[swapIndex]] = [rowOrder[swapIndex], rowOrder[index]];
   }
 
-  const revealOrder = Array<number>(PIXEL_COLUMN_COUNT);
-  columnOrder.forEach((column, order) => {
-    revealOrder[column] = order;
+  const delays = Array<number>(PIXEL_ROW_COUNT);
+  rowOrder.forEach((row, order) => {
+    delays[row] = order * 0.065 + random() * 0.025;
   });
-  return revealOrder;
+  return delays;
 };
 
-const PIXEL_COLUMN_REVEAL_ORDER = createColumnRevealOrder();
+const PIXEL_ROW_REVEAL_DELAYS = createRowRevealDelays();
 
 interface PixelTileProps {
   row: number;
@@ -44,7 +44,7 @@ const PixelTile: React.FC<PixelTileProps> = ({ row, column, revealStarted }) => 
     animate={{ opacity: revealStarted ? 0 : 1 }}
     transition={{
       duration: 0.28,
-      delay: PIXEL_COLUMN_REVEAL_ORDER[column] * 0.065 + row * 0.012 + ((row * column * 7) % 5) * 0.003,
+      delay: PIXEL_ROW_REVEAL_DELAYS[row] + column * 0.026 + ((row * column * 7) % 5) * 0.002,
       ease: 'easeOut',
     }}
   />
