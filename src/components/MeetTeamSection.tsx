@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { motion, type MotionValue, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react';
 import * as THREE from 'three';
 import { getDevicePerformanceProfile } from '../utils/devicePerformance';
 import { LoadingImage } from './LoadingImage';
@@ -8,14 +8,18 @@ const PIXEL_TILE_COUNT = 12 * 8;
 const PIXEL_COLUMN_COUNT = 12;
 
 interface PixelTileProps {
-  progress: MotionValue<number>;
-  start: number;
+  row: number;
+  revealStarted: boolean;
 }
 
-const PixelTile: React.FC<PixelTileProps> = ({ progress, start }) => {
-  const opacity = useTransform(progress, [start, start + 0.06], [1, 0]);
-  return <motion.span className="border border-white/20 bg-white" style={{ opacity }} />;
-};
+const PixelTile: React.FC<PixelTileProps> = ({ row, revealStarted }) => (
+  <motion.span
+    className="border border-white/20 bg-white"
+    initial={{ opacity: 1 }}
+    animate={{ opacity: revealStarted ? 0 : 1 }}
+    transition={{ duration: 0.28, delay: row * 0.06, ease: 'easeOut' }}
+  />
+);
 
 interface MeetTeamSectionProps {
   highlightedImageId: string | null;
@@ -29,8 +33,13 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
   const photoRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
+  const [revealStarted, setRevealStarted] = useState(false);
   const clubPhotoId = 'club-photo';
   const isHighlighted = highlightedImageId === clubPhotoId;
+
+  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+    if (latest > 0.04) setRevealStarted(true);
+  });
 
   // Three.js ambient cosmic star/particle background
   useEffect(() => {
@@ -191,8 +200,8 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
                 return (
                   <PixelTile
                     key={tileIndex}
-                    progress={scrollYProgress}
-                    start={0.04 + row * 0.115}
+                    row={row}
+                    revealStarted={revealStarted}
                   />
                 );
               })}

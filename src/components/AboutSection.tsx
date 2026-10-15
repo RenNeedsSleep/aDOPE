@@ -18,10 +18,15 @@ export const AboutSection: React.FC = () => {
   const titleX = useTransform(progress, [0, 0.35, 1], ['-12vw', '0vw', '0vw']);
   const titleScale = useTransform(progress, [0, 0.38, 1], [0.94, 1, 1]);
   const titleRotate = useTransform(progress, [0, 0.38, 1], [-2.5, 0, 0]);
+  const mobileTitleX = useTransform(progress, [0, 0.35, 1], ['-4vw', '0vw', '0vw']);
+  const mobileTitleScale = useTransform(progress, [0, 0.38, 1], [0.98, 1, 1]);
+  const mobileTitleRotate = useTransform(progress, [0, 0.38, 1], [-1, 0, 0]);
   const titleOpacity = useTransform(progress, [0, 0.18, 1], [0.35, 1, 1]);
   const statementX = useTransform(progress, [0, 0.35, 1], ['12vw', '0vw', '0vw']);
+  const mobileStatementX = useTransform(progress, [0, 0.35, 1], ['4vw', '0vw', '0vw']);
   const statementOpacity = useTransform(progress, [0, 0.2, 1], [0.25, 1, 1]);
   const lineScale = useTransform(progress, [0.08, 0.42], [0, 1]);
+  const mobileLineScale = useTransform(progress, [0.08, 0.42], [0, 1]);
   const orbit = useTransform(progress, [0, 1], [-22, 138]);
 
   const initial = reduceMotion ? { opacity: 1 } : { opacity: 0 };
@@ -53,9 +58,9 @@ export const AboutSection: React.FC = () => {
           initial={initial}
           whileInView={animate}
           viewport={vp}
-          style={reduceMotion || !isDesktop ? undefined : { rotate: orbit }}
+          style={reduceMotion ? undefined : { rotate: orbit }}
         >
-          <span className="absolute -right-1 top-1/2 hidden h-2.5 w-2.5 rounded-full bg-white shadow-[0_0_22px_7px_rgba(255,255,255,.25)] sm:block" />
+          <span className="absolute -right-1 top-1/2 h-2 w-2 rounded-full bg-white shadow-[0_0_22px_7px_rgba(255,255,255,.25)] sm:h-2.5 sm:w-2.5" />
         </motion.div>
         <motion.div
           aria-hidden="true"
@@ -63,9 +68,9 @@ export const AboutSection: React.FC = () => {
           initial={initial}
           whileInView={animate}
           viewport={vp}
-          style={reduceMotion || !isDesktop ? undefined : { rotate: orbit }}
+          style={reduceMotion ? undefined : { rotate: orbit }}
         >
-          <span className="absolute left-0 top-[20%] hidden h-3 w-3 rounded-full border border-white/60 bg-black sm:block" />
+          <span className="absolute left-0 top-[20%] h-2.5 w-2.5 rounded-full border border-white/60 bg-black sm:h-3 sm:w-3" />
         </motion.div>
 
         <div className="relative mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 md:px-16">
@@ -87,7 +92,7 @@ export const AboutSection: React.FC = () => {
                 ? undefined
                 : isDesktop
                   ? { x: titleX, scale: titleScale, rotate: titleRotate, opacity: titleOpacity }
-                  : { opacity: titleOpacity }}
+                  : { x: mobileTitleX, scale: mobileTitleScale, rotate: mobileTitleRotate, opacity: titleOpacity }}
             >
               <h2 className="text-[clamp(1.8rem,8vw,5.5rem)] font-extrabold uppercase leading-[0.86] tracking-[-0.07em] text-white sm:text-[clamp(2.4rem,5.6vw,5.5rem)]">
                 Artists,<br />
@@ -103,11 +108,11 @@ export const AboutSection: React.FC = () => {
                 ? undefined
                 : isDesktop
                   ? { x: statementX, opacity: statementOpacity }
-                  : { opacity: statementOpacity }}
+                  : { x: mobileStatementX, opacity: statementOpacity }}
             >
               <motion.div
                 className="mb-5 h-px origin-left bg-white/60"
-                style={reduceMotion || !isDesktop ? undefined : { scaleX: lineScale }}
+                style={reduceMotion ? undefined : { scaleX: isDesktop ? lineScale : mobileLineScale }}
               />
               <p className="text-[clamp(1.05rem,1.4vw,1.38rem)] leading-[1.48] text-neutral-200">
                 aDOPE is the design club of Mahatma Gandhi Institute of Technology in Hyderabad. It brings student creatives together to make identities, posters, editorial work, digital art, interfaces, and merchandise for campus culture.
