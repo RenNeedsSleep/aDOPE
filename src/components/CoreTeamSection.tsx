@@ -47,17 +47,15 @@ const TeamCard: React.FC<TeamCardProps> = ({
       className="group relative flex min-w-0 flex-col overflow-hidden border border-white/12 bg-neutral-950/80 shadow-[0_16px_44px_rgba(0,0,0,0.55)] transition-all duration-200 hover:border-white/40 hover:shadow-[0_24px_52px_rgba(255,255,255,0.04)]"
     >
       {/* Natural-ratio portrait frame */}
-      <div
-        className={`relative w-full overflow-hidden bg-neutral-900 ${
-          member.imageUrl === '/krish-srk.jpeg' ? 'aspect-[17/5]' : 'aspect-[4/3]'
-        }`}
-      >
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900">
         {member.imageUrl ? (
           <LoadingImage
             src={member.imageUrl}
             alt={member.name}
             className="absolute inset-0"
-            imageClassName="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            imageClassName={`h-full w-full object-cover ${
+              member.imageUrl === '/krish-srk.jpeg' ? 'object-[center_38%]' : 'object-top'
+            } transition-transform duration-700 ease-out group-hover:scale-[1.04]`}
             style={{
               filter: isHighlighted
                 ? 'none'
