@@ -59,7 +59,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
             style={{
               filter: isHighlighted
                 ? 'none'
-                : 'grayscale(0.8) contrast(1.08) brightness(0.9)',
+                : member.imageUrl === '/krish-srk-frame.jpeg'
+                  ? 'grayscale(0.8) contrast(1.08) brightness(1.05)'
+                  : 'grayscale(0.8) contrast(1.08) brightness(0.9)',
             }}
           />
         ) : (
