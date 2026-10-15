@@ -54,7 +54,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
             alt={member.name}
             className="absolute inset-0"
             imageClassName={`h-full w-full object-cover ${
-              member.imageUrl === '/krish-srk.jpeg' ? 'object-[center_38%]' : 'object-top'
+              member.imageUrl === '/krish-srk-frame.jpeg' ? 'object-[center_35%]' : 'object-top'
             } transition-transform duration-700 ease-out group-hover:scale-[1.04]`}
             style={{
               filter: isHighlighted

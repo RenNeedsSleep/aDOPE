@@ -288,7 +288,7 @@ export const CORE_TEAM_DATA: CoreTeamMember[] = [
     id: 'core-head',
     name: 'Krish Srk',
     role: 'Head',
-    imageUrl: '/krish-srk.jpeg',
+    imageUrl: '/krish-srk-frame.jpeg',
     bio: 'Leading aDOPE\'s visual direction and creative work.'
   },
   {
