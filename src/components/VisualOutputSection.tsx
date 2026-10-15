@@ -62,10 +62,14 @@ const OrbitArtwork: React.FC<OrbitArtworkProps> = ({ art, index, progress, highl
       style={reduceMotion ? { x: state.settleX, y: state.settleY, rotate: state.settleRotate, zIndex: 20 + index } : { x, y, rotate, scale, opacity, zIndex: 20 + index }}
     >
       <div className="group relative aspect-[1.12] overflow-hidden border border-white/20 bg-black shadow-[0_26px_66px_rgba(0,0,0,.42)]">
-        <motion.div
-          className="absolute inset-0 bg-cover bg-center transition duration-700"
+        <motion.img
+          src={art.imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+          className="absolute inset-0 h-full w-full object-cover object-center transition duration-700"
           style={{
-            backgroundImage: `url('${art.imageUrl}')`,
             filter: isHighlighted ? 'none' : 'grayscale(1) contrast(1.08)',
             scale: reduceMotion ? 1.04 : imageScale,
           }}

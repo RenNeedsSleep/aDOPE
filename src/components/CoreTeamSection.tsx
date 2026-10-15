@@ -53,6 +53,9 @@ const TeamCard: React.FC<TeamCardProps> = ({
           <img
             src={member.imageUrl}
             alt={member.name}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
             className={`h-full w-full object-cover ${member.imageUrl === '/krish-srk.jpeg' ? 'object-[center_25%]' : 'object-top'} transition-transform duration-700 ease-out group-hover:scale-[1.04]`}
             style={{
               filter: isHighlighted

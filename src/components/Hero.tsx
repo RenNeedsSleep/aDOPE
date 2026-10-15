@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { ThreeCanvas } from './ThreeCanvas';
 import { LOGO_URL } from '../data/mockData';
+import { getDevicePerformanceProfile } from '../utils/devicePerformance';
 
 const VIDEO_SRC = '/intro-4k.mp4';
 const MOBILE_VIDEO_SRC = '/intro-mobile.mp4';
 
 export const Hero: React.FC = () => {
+  const [performanceProfile] = useState(getDevicePerformanceProfile);
   const [videoSrc, setVideoSrc] = useState(() => (
     window.matchMedia('(max-width: 767px), (pointer: coarse)').matches ? MOBILE_VIDEO_SRC : VIDEO_SRC
   ));
@@ -125,14 +127,26 @@ export const Hero: React.FC = () => {
       const total = rect.height - window.innerHeight;
       const target = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
       current += (target - current) * 0.14;
-      if (Math.abs(target - current) < 0.0005) current = target;
+      const isSettled = Math.abs(target - current) < 0.0005;
+      if (isSettled) current = target;
       progressRef.current = current;
       applyProgress();
-      rafId = requestAnimationFrame(loop);
+      rafId = isSettled ? 0 : requestAnimationFrame(loop);
     };
-    rafId = requestAnimationFrame(loop);
 
-    return () => cancelAnimationFrame(rafId);
+    const scheduleProgressUpdate = () => {
+      if (!rafId) rafId = requestAnimationFrame(loop);
+    };
+
+    window.addEventListener('scroll', scheduleProgressUpdate, { passive: true });
+    window.addEventListener('resize', scheduleProgressUpdate, { passive: true });
+    scheduleProgressUpdate();
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', scheduleProgressUpdate);
+      window.removeEventListener('resize', scheduleProgressUpdate);
+    };
   }, [applyProgress]);
 
   const handleSkip = () => {
@@ -171,7 +185,7 @@ export const Hero: React.FC = () => {
           style={{ transform: 'translate(-50%, -50%)' }}
         >
           <div className="absolute inset-0 w-full h-full overflow-hidden bg-transparent">
-            {!videoFailed ? (
+            {!videoFailed && !performanceProfile.shouldSkipIntroVideo ? (
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover"
@@ -180,7 +194,7 @@ export const Hero: React.FC = () => {
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="metadata"
                 onPlaying={() => {
                   setVideoReady(true);
                 }}
@@ -188,14 +202,9 @@ export const Hero: React.FC = () => {
                 style={{ opacity: videoReady ? 1 : 0, transition: 'opacity 0.6s' }}
               />
             ) : (
-              <div className="w-full h-full relative bg-black">
+              <div aria-hidden="true" className="relative h-full w-full bg-black">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.14),transparent_60%)] animate-pulse" />
                 <div className="absolute inset-0 bg-grid-pattern opacity-40" style={{ transform: 'perspective(600px) rotateX(35deg) scale(1.6)' }} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/40">
-                    Place intro.mp4 in /public
-                  </span>
-                </div>
               </div>
             )}
           </div>

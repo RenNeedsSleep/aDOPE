@@ -45,6 +45,7 @@ export const ArtworkModal: React.FC<ArtworkModalProps> = ({ artwork, onClose }) 
             <img
               src={artwork.imageUrl}
               alt={artwork.title}
+              decoding="async"
               className="w-full h-auto max-h-[500px] object-contain"
             />
           </div>

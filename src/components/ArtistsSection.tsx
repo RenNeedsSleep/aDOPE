@@ -53,10 +53,14 @@ const PracticeCard: React.FC<PracticeCardProps> = ({
     >
       {/* Background image */}
       <div className="relative aspect-[16/10] w-full overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+        <img
+          src={artist.avatarUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+          className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.06]"
           style={{
-            backgroundImage: `url('${artist.avatarUrl}')`,
             filter: isHighlighted ? 'none' : 'grayscale(1) contrast(1.09)',
           }}
         />

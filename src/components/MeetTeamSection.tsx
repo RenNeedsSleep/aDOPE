@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react';
 import * as THREE from 'three';
+import { getDevicePerformanceProfile } from '../utils/devicePerformance';
 
 const PIXEL_REVEAL_ORDER = Array.from({ length: 96 }, (_, index) => index)
   .sort((left, right) => ((left * 37) % 97) - ((right * 37) % 97));
@@ -45,8 +46,14 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
     if (!mount) return;
 
     let renderer: THREE.WebGLRenderer;
+    const performanceProfile = getDevicePerformanceProfile();
+    const compactDevice = performanceProfile.isCoarsePointer || performanceProfile.isLowEndDevice;
     try {
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: !compactDevice,
+        powerPreference: 'low-power',
+      });
     } catch {
       return;
     }
@@ -56,12 +63,12 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
     camera.position.z = 18;
 
     renderer.setSize(mount.clientWidth, mount.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compactDevice ? 1 : 1.25));
     renderer.setClearColor(0x000000, 0);
     mount.appendChild(renderer.domElement);
 
     // Subtle drifting star/particle field
-    const particleCount = 260;
+    const particleCount = compactDevice ? 100 : 260;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
 
@@ -81,14 +88,41 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
     const particleSystem = new THREE.Points(geometry, pMaterial);
     scene.add(particleSystem);
 
-    let rafId: number;
-    const animate = () => {
+    let rafId = 0;
+    let isVisible = false;
+    let lastFrameTime = 0;
+    const frameInterval = compactDevice ? 1000 / 24 : 1000 / 45;
+    const animate = (timestamp: number) => {
+      if (!isVisible || document.hidden) {
+        rafId = 0;
+        return;
+      }
       rafId = requestAnimationFrame(animate);
+      if (timestamp - lastFrameTime < frameInterval) return;
+      lastFrameTime = timestamp;
       particleSystem.rotation.y += 0.0006;
       particleSystem.rotation.x += 0.0003;
       renderer.render(scene, camera);
     };
-    animate();
+
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+      if (isVisible && !document.hidden && !rafId) rafId = requestAnimationFrame(animate);
+      if (!isVisible && rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+    });
+    visibilityObserver.observe(mount);
+    const handleVisibilityChange = () => {
+      if (document.hidden && rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+      } else if (!document.hidden && isVisible && !rafId) {
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const handleResize = () => {
       if (!mount) return;
@@ -104,6 +138,8 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
 
     return () => {
       cancelAnimationFrame(rafId);
+      visibilityObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resize', handleResize);
       geometry.dispose();
       pMaterial.dispose();
@@ -147,6 +183,9 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
           <img
             src="/adope-club-photo.jpeg"
             alt="aDOPE club members and faculty together at MGIT"
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
             className="block h-auto max-h-[40svh] w-auto max-w-full border border-white/15 object-contain shadow-2xl transition-all duration-200 sm:max-h-[58svh]"
             style={{
               filter: isHighlighted ? 'none' : 'grayscale(1) contrast(1.05)',

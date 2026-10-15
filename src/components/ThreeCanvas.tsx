@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { getDevicePerformanceProfile } from '../utils/devicePerformance';
 
 interface ThreeCanvasProps {
   className?: string;
@@ -20,10 +21,15 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({ className = '' }) => {
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     camera.position.z = 8;
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    const performanceProfile = getDevicePerformanceProfile();
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: !performanceProfile.isLowEndDevice && !performanceProfile.isCoarsePointer,
+      powerPreference: 'low-power',
+    });
     renderer.setSize(width, height);
-    const compactDevice = window.matchMedia('(pointer: coarse)').matches;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, compactDevice ? 1.25 : 2));
+    const compactDevice = performanceProfile.isCoarsePointer || performanceProfile.isLowEndDevice;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compactDevice ? 1 : 1.5));
     
     // Clear existing canvas children if any
     while (container.firstChild) {
@@ -78,7 +84,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({ className = '' }) => {
     }
 
     // 3. Starfield particles
-    const starCount = compactDevice ? 320 : 900;
+    const starCount = compactDevice ? 160 : 700;
     const sGeo = new THREE.BufferGeometry();
     const sPos = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount * 3; i += 3) {
@@ -104,7 +110,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({ className = '' }) => {
       side: THREE.DoubleSide,
     });
     const shards: THREE.Mesh[] = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < (compactDevice ? 6 : 14); i++) {
       const shard = new THREE.Mesh(
         new THREE.PlaneGeometry(0.6 + Math.random() * 1.8, 0.6 + Math.random() * 1.8, 1, 1),
         shardMat
@@ -127,11 +133,18 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({ className = '' }) => {
     // Animation Loop
     let animationFrameId = 0;
     let isVisible = false;
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
+    const frameInterval = compactDevice ? 1000 / 30 : 1000 / 45;
+    let lastFrameTime = 0;
 
-    const animate = () => {
-      if (!isVisible) return;
+    const animate = (timestamp: number) => {
+      if (!isVisible || document.hidden) {
+        animationFrameId = 0;
+        return;
+      }
       animationFrameId = requestAnimationFrame(animate);
+      if (timestamp - lastFrameTime < frameInterval) return;
+      lastFrameTime = timestamp;
       const t = clock.getElapsedTime();
 
       // Core pulses & rotates
@@ -166,13 +179,22 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({ className = '' }) => {
     };
     const visibilityObserver = new IntersectionObserver(([entry]) => {
       isVisible = entry.isIntersecting;
-      if (isVisible && !animationFrameId) animationFrameId = requestAnimationFrame(animate);
+      if (isVisible && !document.hidden && !animationFrameId) animationFrameId = requestAnimationFrame(animate);
       if (!isVisible && animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = 0;
       }
     });
     visibilityObserver.observe(container);
+    const handleVisibilityChange = () => {
+      if (document.hidden && animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = 0;
+      } else if (!document.hidden && isVisible && !animationFrameId) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Resize Handling via ResizeObserver
     const resizeObserver = new ResizeObserver((entries) => {
@@ -191,6 +213,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({ className = '' }) => {
     return () => {
       cancelAnimationFrame(animationFrameId);
       visibilityObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (!compactDevice) window.removeEventListener('mousemove', handleMouseMove);
       resizeObserver.disconnect();
       if (renderer.domElement && container.contains(renderer.domElement)) {
