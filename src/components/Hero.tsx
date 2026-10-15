@@ -13,7 +13,6 @@ export const Hero: React.FC = () => {
   const [coords, setCoords] = useState({ x: '0.00', y: '100.00' });
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
-  const [videoNeedsTap, setVideoNeedsTap] = useState(false);
   const [skipped, setSkipped] = useState(false);
 
   const sectionRef = useRef<HTMLElement>(null);
@@ -31,7 +30,6 @@ export const Hero: React.FC = () => {
       const nextSource = mobileQuery.matches ? MOBILE_VIDEO_SRC : VIDEO_SRC;
       setVideoSrc(nextSource);
       setVideoReady(false);
-      setVideoNeedsTap(false);
     };
 
     mobileQuery.addEventListener('change', updateVideoSource);
@@ -48,8 +46,8 @@ export const Hero: React.FC = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Muted inline autoplay is supported by mobile browsers, but can still be
-  // blocked by user settings. In that case, expose an explicit tap-to-play.
+  // Muted inline autoplay is supported by mobile browsers. If a device blocks
+  // playback, leave the animated Three.js background visible as the fallback.
   useEffect(() => {
     const video = videoRef.current;
     if (!video || videoFailed) return;
@@ -60,16 +58,12 @@ export const Hero: React.FC = () => {
       video.playsInline = true;
       video.play().then(() => {
         setVideoReady(true);
-        setVideoNeedsTap(false);
       }).catch(() => {
-        setVideoNeedsTap(true);
+        setVideoReady(false);
       });
     };
 
-    const onCanPlay = () => {
-      setVideoReady(true);
-      attemptPlayback();
-    };
+    const onCanPlay = () => attemptPlayback();
 
     video.addEventListener('canplay', onCanPlay, { once: true });
     if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) attemptPlayback();
@@ -173,10 +167,10 @@ export const Hero: React.FC = () => {
         {/* The morphing intro video */}
         <div
           ref={videoWrapRef}
-          className="absolute left-1/2 top-1/2 z-20 w-full h-full overflow-hidden bg-black will-change-transform"
+          className="absolute left-1/2 top-1/2 z-20 w-full h-full overflow-hidden bg-transparent will-change-transform"
           style={{ transform: 'translate(-50%, -50%)' }}
         >
-          <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
+          <div className="absolute inset-0 w-full h-full overflow-hidden bg-transparent">
             {!videoFailed ? (
               <video
                 ref={videoRef}
@@ -187,10 +181,8 @@ export const Hero: React.FC = () => {
                 loop
                 playsInline
                 preload="auto"
-                onCanPlay={() => setVideoReady(true)}
                 onPlaying={() => {
                   setVideoReady(true);
-                  setVideoNeedsTap(false);
                 }}
                 onError={() => setVideoFailed(true)}
                 style={{ opacity: videoReady ? 1 : 0, transition: 'opacity 0.6s' }}
@@ -205,23 +197,6 @@ export const Hero: React.FC = () => {
                   </span>
                 </div>
               </div>
-            )}
-            {videoNeedsTap && !videoFailed && (
-              <button
-                type="button"
-                onClick={() => {
-                  const video = videoRef.current;
-                  if (!video) return;
-                  video.muted = true;
-                  video.play().then(() => {
-                    setVideoReady(true);
-                    setVideoNeedsTap(false);
-                  }).catch(() => setVideoNeedsTap(true));
-                }}
-                className="absolute inset-0 z-20 flex items-center justify-center bg-black/35 text-white font-mono text-xs uppercase tracking-[0.2em]"
-              >
-                Tap to play intro
-              </button>
             )}
           </div>
         </div>

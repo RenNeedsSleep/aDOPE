@@ -1,9 +1,23 @@
-import React, { useEffect, useRef } from 'react';
-import { motion, useInView, useReducedMotion } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react';
 import * as THREE from 'three';
 
 const PIXEL_REVEAL_ORDER = Array.from({ length: 96 }, (_, index) => index)
   .sort((left, right) => ((left * 37) % 97) - ((right * 37) % 97));
+
+interface PixelTileProps {
+  revealOrder: number;
+  revealStarted: boolean;
+}
+
+const PixelTile: React.FC<PixelTileProps> = ({ revealOrder, revealStarted }) => (
+  <motion.span
+    className="border border-white/20 bg-white"
+    initial={{ opacity: 1 }}
+    animate={{ opacity: revealStarted ? 0 : 1 }}
+    transition={{ duration: 0.28, delay: revealOrder * 0.009, ease: 'easeOut' }}
+  />
+);
 
 interface MeetTeamSectionProps {
   highlightedImageId: string | null;
@@ -12,12 +26,18 @@ interface MeetTeamSectionProps {
 }
 
 export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedImageId, onImageEnter, onImageLeave }) => {
+  const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
-  const hasPhotoEntered = useInView(photoRef, { once: true, amount: 0.2 });
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
+  const [revealStarted, setRevealStarted] = useState(false);
   const clubPhotoId = 'club-photo';
   const isHighlighted = highlightedImageId === clubPhotoId;
+
+  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+    if (latest > 0.02) setRevealStarted(true);
+  });
 
   // Three.js ambient cosmic star/particle background
   useEffect(() => {
@@ -93,8 +113,12 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
   }, []);
 
   return (
-    <section aria-label="Meet the team" className="relative z-20 h-[82svh] overflow-clip bg-black sm:h-[132svh]">
-      <div className="sticky top-0 flex h-[82svh] min-h-[82svh] flex-col items-center justify-center gap-[2svh] border-b border-white/10 bg-black px-4 py-4 sm:h-[100svh] sm:min-h-[100svh] sm:justify-between sm:gap-0 sm:py-8 md:py-10">
+    <section
+      ref={sectionRef}
+      aria-label="Meet the team"
+      className={`relative z-20 overflow-clip bg-black ${reduceMotion ? 'h-[100svh]' : 'h-[156svh]'}`}
+    >
+      <div className="sticky top-0 flex h-[100svh] min-h-[620px] flex-col items-center justify-center gap-[2svh] border-b border-white/10 bg-black px-4 py-4 sm:justify-between sm:gap-0 sm:py-8 md:py-10">
         {/* Three.js Motion Canvas (Particles) in the background */}
         <div ref={canvasRef} className="pointer-events-none absolute inset-0 z-0 h-full w-full" />
 
@@ -134,17 +158,7 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
               className="pointer-events-none absolute inset-0 z-10 grid grid-cols-12 grid-rows-8"
             >
               {PIXEL_REVEAL_ORDER.map((tileIndex, revealOrder) => (
-                <motion.span
-                  key={tileIndex}
-                  className="border border-white/[0.07] bg-[#b1b4b6]"
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: hasPhotoEntered ? 0 : 1 }}
-                  transition={{
-                    duration: 0.28,
-                    delay: revealOrder * 0.009,
-                    ease: 'easeOut',
-                  }}
-                />
+                <PixelTile key={tileIndex} revealOrder={revealOrder} revealStarted={revealStarted} />
               ))}
             </div>
           )}

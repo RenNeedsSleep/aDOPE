@@ -91,7 +91,6 @@ export const NirvanaPhoenix: React.FC = () => {
       velocityX = 0;
       velocityY = 0;
       mount.setPointerCapture(event.pointerId);
-      event.preventDefault();
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!dragging) return;
@@ -178,7 +177,6 @@ export const NirvanaPhoenix: React.FC = () => {
     };
   }, []);
 
-  return <div ref={mountRef} className="absolute inset-0 z-10 cursor-grab touch-none active:cursor-grabbing" aria-label="Drag to rotate the three-dimensional phoenix emblem for NIRVANA 2026" />;
+  return <div ref={mountRef} className="absolute inset-0 z-10 cursor-grab touch-pan-y active:cursor-grabbing" aria-label="Drag to rotate the three-dimensional phoenix emblem for NIRVANA 2026" />;
 };
-
 

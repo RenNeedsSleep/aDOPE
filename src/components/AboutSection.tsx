@@ -30,7 +30,7 @@ export const AboutSection: React.FC = () => {
           whileInView={animate}
           viewport={vp}
         >
-          <span className="absolute -right-1 top-1/2 h-2.5 w-2.5 rounded-full bg-white shadow-[0_0_22px_7px_rgba(255,255,255,.25)]" />
+          <span className="absolute -right-1 top-1/2 hidden h-2.5 w-2.5 rounded-full bg-white shadow-[0_0_22px_7px_rgba(255,255,255,.25)] sm:block" />
         </motion.div>
         <motion.div
           aria-hidden="true"
@@ -39,7 +39,7 @@ export const AboutSection: React.FC = () => {
           whileInView={animate}
           viewport={vp}
         >
-          <span className="absolute left-0 top-[20%] h-3 w-3 rounded-full border border-white/60 bg-black" />
+          <span className="absolute left-0 top-[20%] hidden h-3 w-3 rounded-full border border-white/60 bg-black sm:block" />
         </motion.div>
 
         <div className="relative mx-auto w-full max-w-[1440px] px-4 py-20 sm:px-6 sm:py-24 md:px-16 md:py-28">
@@ -50,7 +50,6 @@ export const AboutSection: React.FC = () => {
             viewport={vp}
             transition={{ duration: 0.5 }}
           >
-            <span className="h-px w-10 bg-white/50" />
             01 // Mission &amp; Ethos
           </motion.div>
 
@@ -81,9 +80,6 @@ export const AboutSection: React.FC = () => {
               <div className="mb-5 h-px bg-white/60" />
               <p className="text-[clamp(1.05rem,1.4vw,1.38rem)] leading-[1.48] text-neutral-200">
                 aDOPE is the design club of Mahatma Gandhi Institute of Technology in Hyderabad. It brings student creatives together to make identities, posters, editorial work, digital art, interfaces, and merchandise for campus culture.
-              </p>
-              <p className="mt-4 max-w-[55ch] text-xs leading-relaxed text-neutral-400 sm:mt-5 sm:text-sm">
-                The club describes itself as a design team and digital art club. Its public archive shows a practice grounded in visual communication, collaborative briefs, and making memorable work for MGIT.
               </p>
               <div className="mt-6 flex flex-wrap gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-neutral-500 sm:mt-8">
                 <span className="border border-white/15 px-2.5 py-1.5">MGIT / Hyderabad</span>

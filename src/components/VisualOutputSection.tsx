@@ -57,13 +57,7 @@ const OrbitArtwork: React.FC<OrbitArtworkProps> = ({ art, index, progress, highl
     <motion.article
       onPointerEnter={() => window.matchMedia('(hover: hover)').matches && onImageEnter(imageId)}
       onPointerLeave={() => window.matchMedia('(hover: hover)').matches && onImageLeave(imageId)}
-      onClick={() => {
-        if (window.matchMedia('(hover: none)').matches && !isHighlighted) {
-          onImageEnter(imageId);
-          return;
-        }
-        onSelectArtwork(art);
-      }}
+      onClick={() => onSelectArtwork(art)}
       className="absolute left-1/2 top-1/2 z-20 w-[43vw] max-w-[350px] -translate-x-1/2 -translate-y-1/2 cursor-pointer will-change-transform sm:w-[25vw] sm:max-w-[390px]"
       style={reduceMotion ? { x: state.settleX, y: state.settleY, rotate: state.settleRotate, zIndex: 20 + index } : { x, y, rotate, scale, opacity, zIndex: 20 + index }}
     >
@@ -111,21 +105,6 @@ export const VisualOutputSection: React.FC<VisualOutputSectionProps> = ({ highli
           <div>
             <span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.21em] text-neutral-400 sm:text-[10px]">05 // A living archive</span>
             <h2 className="text-[clamp(2.6rem,6.8vw,7.6rem)] font-extrabold uppercase leading-[0.82] tracking-[-0.06em] text-white">Design<br /><span className="text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,.72)] sm:[-webkit-text-stroke:2px_rgba(255,255,255,.72)]">Orbit</span></h2>
-            <div className="mt-3 flex items-center gap-2 sm:mt-4 sm:gap-2.5" aria-label="Design tools">
-              {DESIGN_TOOLS.map((tool) => (
-                <span
-                  key={tool.name}
-                  title={tool.name}
-                  className="flex h-8 w-8 items-center justify-center border border-white/15 bg-black/60 p-1.5 sm:h-9 sm:w-9"
-                >
-                  <img
-                    src={tool.src}
-                    alt={tool.name}
-                    className="h-full w-full object-contain grayscale"
-                  />
-                </span>
-              ))}
-            </div>
           </div>
           <div className="hidden max-w-[19rem] pt-2 text-right sm:block">
             <span className="font-mono text-[9px] uppercase leading-relaxed tracking-[0.17em] text-white/52">Each fragment follows its own route.<br />The Nirvana mark holds the system together.</span>
@@ -133,6 +112,30 @@ export const VisualOutputSection: React.FC<VisualOutputSectionProps> = ({ highli
         </motion.header>
 
         <motion.div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[min(66vw,640px)] w-[min(66vw,640px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,175,90,.21),rgba(255,175,90,.04)_42%,transparent_69%)] blur-2xl" style={reduceMotion ? undefined : { opacity: coreGlow }} />
+        <motion.div
+          aria-label="Design tools orbit"
+          role="group"
+          className="pointer-events-none absolute left-1/2 top-1/2 z-[15] h-[min(88vw,900px)] w-[min(88vw,900px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
+          animate={reduceMotion ? { rotate: 0 } : { rotate: 360 }}
+          transition={reduceMotion ? undefined : { duration: 48, ease: 'linear', repeat: Infinity }}
+        >
+          {DESIGN_TOOLS.map((tool, index) => {
+            const angle = (index / DESIGN_TOOLS.length) * Math.PI * 2 - Math.PI / 2;
+            const left = 50 + Math.cos(angle) * 50;
+            const top = 50 + Math.sin(angle) * 50;
+
+            return (
+              <span
+                key={tool.name}
+                title={tool.name}
+                className="absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center border border-white/20 bg-black/80 p-1.5 sm:h-9 sm:w-9"
+                style={{ left: `${left}%`, top: `${top}%` }}
+              >
+                <img src={tool.src} alt={tool.name} className="h-full w-full object-contain grayscale" />
+              </span>
+            );
+          })}
+        </motion.div>
         {/* Seamless 3D Nirvana Phoenix mark without the black box frame */}
         <motion.div className="absolute left-1/2 top-1/2 z-10 h-[min(64vw,610px)] w-[min(72vw,720px)] -translate-x-1/2 -translate-y-1/2" style={reduceMotion ? undefined : { y: coreY, scale: coreScale }}>
           <NirvanaPhoenix />

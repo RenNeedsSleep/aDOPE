@@ -128,7 +128,7 @@ export const ArtistsSection: React.FC<ArtistsSectionProps> = ({
               viewport={{ once: true, amount: 0.3 }}
               className="mb-2 block font-mono text-[9px] uppercase tracking-[0.21em] text-neutral-400 sm:text-[10px]"
             >
-              02 // Disciplines in motion
+              02 // Disciplines in Motion
             </motion.span>
             <motion.h2
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
