@@ -57,7 +57,7 @@ export const NirvanaPhoenix: React.FC = () => {
             new THREE.PlaneGeometry(width, height),
             new THREE.MeshBasicMaterial({
               map: loaded,
-              color: 0xffb467,
+              color: 0xffc17f,
               transparent: true,
               opacity: 0.98,
               depthWrite: false,
@@ -70,7 +70,7 @@ export const NirvanaPhoenix: React.FC = () => {
             new THREE.PlaneGeometry(width, height),
             new THREE.MeshBasicMaterial({
               map: loaded,
-              color: 0xffb467,
+              color: 0xffc17f,
               transparent: true,
               opacity: 0.98,
               depthWrite: false,
