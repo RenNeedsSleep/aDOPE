@@ -2,16 +2,23 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { ThreeCanvas } from './ThreeCanvas';
 import { LOGO_URL } from '../data/mockData';
-import { getDevicePerformanceProfile } from '../utils/devicePerformance';
+import {
+  getDevicePerformanceProfile,
+  subscribeToDevicePerformanceProfile,
+} from '../utils/devicePerformance';
+import { ImageSkeleton } from './LoadingImage';
 
 const VIDEO_SRC = '/intro-4k.mp4';
 const MOBILE_VIDEO_SRC = '/intro-mobile.mp4';
 
 export const Hero: React.FC = () => {
-  const [performanceProfile] = useState(getDevicePerformanceProfile);
-  const [videoSrc, setVideoSrc] = useState(() => (
-    window.matchMedia('(max-width: 767px), (pointer: coarse)').matches ? MOBILE_VIDEO_SRC : VIDEO_SRC
-  ));
+  const [performanceProfile, setPerformanceProfile] = useState(getDevicePerformanceProfile);
+  const [videoSrc, setVideoSrc] = useState(() => {
+    const profile = getDevicePerformanceProfile();
+    return profile.isCoarsePointer || profile.isLowEndDevice || profile.isSlowConnection
+      ? MOBILE_VIDEO_SRC
+      : VIDEO_SRC;
+  });
   const [coords, setCoords] = useState({ x: '0.00', y: '100.00' });
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -22,20 +29,27 @@ export const Hero: React.FC = () => {
   const slotRef = useRef<HTMLDivElement>(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoSrcRef = useRef(videoSrc);
   const introTextRef = useRef<HTMLDivElement>(null);
   const heroContentRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
 
   useEffect(() => {
-    const mobileQuery = window.matchMedia('(max-width: 767px), (pointer: coarse)');
     const updateVideoSource = () => {
-      const nextSource = mobileQuery.matches ? MOBILE_VIDEO_SRC : VIDEO_SRC;
-      setVideoSrc(nextSource);
-      setVideoReady(false);
+      const profile = getDevicePerformanceProfile();
+      const nextSource =
+        profile.isCoarsePointer || profile.isLowEndDevice || profile.isSlowConnection
+          ? MOBILE_VIDEO_SRC
+          : VIDEO_SRC;
+      setPerformanceProfile(profile);
+      if (videoSrcRef.current !== nextSource) {
+        videoSrcRef.current = nextSource;
+        setVideoReady(false);
+        setVideoSrc(nextSource);
+      }
     };
 
-    mobileQuery.addEventListener('change', updateVideoSource);
-    return () => mobileQuery.removeEventListener('change', updateVideoSource);
+    return subscribeToDevicePerformanceProfile(updateVideoSource);
   }, []);
 
   useEffect(() => {
@@ -184,11 +198,12 @@ export const Hero: React.FC = () => {
           className="absolute left-1/2 top-1/2 z-20 w-full h-full overflow-hidden bg-transparent will-change-transform"
           style={{ transform: 'translate(-50%, -50%)' }}
         >
-          <div className="absolute inset-0 w-full h-full overflow-hidden bg-transparent">
-            {!videoFailed && !performanceProfile.shouldSkipIntroVideo ? (
+          <div className="absolute inset-0 h-full w-full overflow-hidden bg-black">
+            <ImageSkeleton className="z-0" />
+            {!videoFailed && (
               <video
                 ref={videoRef}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 z-10 h-full w-full object-cover"
                 src={videoSrc}
                 autoPlay
                 muted
@@ -198,13 +213,28 @@ export const Hero: React.FC = () => {
                 onPlaying={() => {
                   setVideoReady(true);
                 }}
+                onWaiting={() => setVideoReady(false)}
                 onError={() => setVideoFailed(true)}
                 style={{ opacity: videoReady ? 1 : 0, transition: 'opacity 0.6s' }}
               />
-            ) : (
-              <div aria-hidden="true" className="relative h-full w-full bg-black">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.14),transparent_60%)] animate-pulse" />
-                <div className="absolute inset-0 bg-grid-pattern opacity-40" style={{ transform: 'perspective(600px) rotateX(35deg) scale(1.6)' }} />
+            )}
+            {!videoReady && !videoFailed && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-5 px-6"
+              >
+                <div aria-hidden="true" className="w-40 space-y-2.5">
+                  <div className="h-1 w-full overflow-hidden bg-white/15">
+                    <div className="h-full w-1/3 animate-[loading-progress_1.8s_ease-in-out_infinite] bg-white/70" />
+                  </div>
+                  <div className="h-px w-2/3 animate-pulse bg-white/20" />
+                </div>
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/60">
+                  {performanceProfile.isSlowConnection
+                    ? 'Low data mode · Loading compact intro'
+                    : 'Loading intro'}
+                </span>
               </div>
             )}
           </div>

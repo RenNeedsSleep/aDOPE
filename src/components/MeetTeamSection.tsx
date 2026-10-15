@@ -1,24 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react';
+import React, { useEffect, useRef } from 'react';
+import { motion, type MotionValue, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import * as THREE from 'three';
 import { getDevicePerformanceProfile } from '../utils/devicePerformance';
+import { LoadingImage } from './LoadingImage';
 
-const PIXEL_REVEAL_ORDER = Array.from({ length: 96 }, (_, index) => index)
-  .sort((left, right) => ((left * 37) % 97) - ((right * 37) % 97));
+const PIXEL_TILE_COUNT = 12 * 8;
+const PIXEL_COLUMN_COUNT = 12;
 
 interface PixelTileProps {
-  revealOrder: number;
-  revealStarted: boolean;
+  progress: MotionValue<number>;
+  start: number;
 }
 
-const PixelTile: React.FC<PixelTileProps> = ({ revealOrder, revealStarted }) => (
-  <motion.span
-    className="border border-white/20 bg-white"
-    initial={{ opacity: 1 }}
-    animate={{ opacity: revealStarted ? 0 : 1 }}
-    transition={{ duration: 0.28, delay: revealOrder * 0.009, ease: 'easeOut' }}
-  />
-);
+const PixelTile: React.FC<PixelTileProps> = ({ progress, start }) => {
+  const opacity = useTransform(progress, [start, start + 0.06], [1, 0]);
+  return <motion.span className="border border-white/20 bg-white" style={{ opacity }} />;
+};
 
 interface MeetTeamSectionProps {
   highlightedImageId: string | null;
@@ -32,13 +29,8 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
   const photoRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
-  const [revealStarted, setRevealStarted] = useState(false);
   const clubPhotoId = 'club-photo';
   const isHighlighted = highlightedImageId === clubPhotoId;
-
-  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
-    if (latest > 0.02) setRevealStarted(true);
-  });
 
   // Three.js ambient cosmic star/particle background
   useEffect(() => {
@@ -152,7 +144,7 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
     <section
       ref={sectionRef}
       aria-label="Meet the team"
-      className={`relative z-20 overflow-clip bg-black ${reduceMotion ? 'h-[100svh]' : 'h-[156svh]'}`}
+      className={`relative z-20 overflow-clip bg-black ${reduceMotion ? 'h-[100svh]' : 'h-[210svh] sm:h-[220svh]'}`}
     >
       <div className="sticky top-0 flex h-[100svh] min-h-[620px] flex-col items-center justify-center gap-[2svh] border-b border-white/10 bg-black px-4 py-4 sm:justify-between sm:gap-0 sm:py-8 md:py-10">
         {/* Three.js Motion Canvas (Particles) in the background */}
@@ -174,19 +166,17 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
 
         <motion.div
           ref={photoRef}
-          className="relative z-10 mx-auto flex max-h-[40svh] w-full max-w-[840px] items-center justify-center sm:max-h-[58svh]"
+          className="relative z-10 mx-auto flex h-[40svh] w-full max-w-[840px] items-center justify-center sm:h-[58svh]"
           onPointerEnter={() => window.matchMedia('(hover: hover)').matches && onImageEnter(clubPhotoId)}
           onPointerLeave={() => window.matchMedia('(hover: hover)').matches && onImageLeave(clubPhotoId)}
           onClick={() => window.matchMedia('(hover: none)').matches && onImageEnter(clubPhotoId)}
         >
           {/* Central Team Photo */}
-          <img
+          <LoadingImage
             src="/adope-club-photo.jpeg"
             alt="aDOPE club members and faculty together at MGIT"
-            loading="lazy"
-            decoding="async"
-            fetchPriority="low"
-            className="block h-auto max-h-[40svh] w-auto max-w-full border border-white/15 object-contain shadow-2xl transition-all duration-200 sm:max-h-[58svh]"
+            className="h-full w-full border border-white/15 shadow-2xl"
+            imageClassName="h-full w-full object-contain transition-all duration-200"
             style={{
               filter: isHighlighted ? 'none' : 'grayscale(1) contrast(1.05)',
             }}
@@ -196,9 +186,16 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 z-10 grid grid-cols-12 grid-rows-8"
             >
-              {PIXEL_REVEAL_ORDER.map((tileIndex, revealOrder) => (
-                <PixelTile key={tileIndex} revealOrder={revealOrder} revealStarted={revealStarted} />
-              ))}
+              {Array.from({ length: PIXEL_TILE_COUNT }, (_, tileIndex) => {
+                const row = Math.floor(tileIndex / PIXEL_COLUMN_COUNT);
+                return (
+                  <PixelTile
+                    key={tileIndex}
+                    progress={scrollYProgress}
+                    start={0.04 + row * 0.115}
+                  />
+                );
+              })}
             </div>
           )}
         </motion.div>

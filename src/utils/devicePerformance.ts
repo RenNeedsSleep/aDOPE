@@ -1,6 +1,8 @@
 interface ConnectionHints {
   effectiveType?: string;
   saveData?: boolean;
+  addEventListener?: (type: 'change', listener: () => void) => void;
+  removeEventListener?: (type: 'change', listener: () => void) => void;
 }
 
 interface NavigatorWithHints extends Navigator {
@@ -11,7 +13,7 @@ interface NavigatorWithHints extends Navigator {
 export interface DevicePerformanceProfile {
   isCoarsePointer: boolean;
   isLowEndDevice: boolean;
-  shouldSkipIntroVideo: boolean;
+  isSlowConnection: boolean;
 }
 
 export const getDevicePerformanceProfile = (): DevicePerformanceProfile => {
@@ -26,7 +28,18 @@ export const getDevicePerformanceProfile = (): DevicePerformanceProfile => {
   return {
     isCoarsePointer,
     isLowEndDevice,
-    shouldSkipIntroVideo:
-      connection?.saveData === true || effectiveType === 'slow-2g' || effectiveType === '2g',
+    isSlowConnection: connection?.saveData === true || effectiveType === 'slow-2g' || effectiveType === '2g',
+  };
+};
+
+export const subscribeToDevicePerformanceProfile = (onChange: () => void): (() => void) => {
+  const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
+  const connection = (navigator as NavigatorWithHints).connection;
+  coarsePointerQuery.addEventListener('change', onChange);
+  connection?.addEventListener?.('change', onChange);
+
+  return () => {
+    coarsePointerQuery.removeEventListener('change', onChange);
+    connection?.removeEventListener?.('change', onChange);
   };
 };

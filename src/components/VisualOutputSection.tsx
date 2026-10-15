@@ -4,6 +4,7 @@ import { motion, MotionValue, useReducedMotion, useScroll, useSpring, useTransfo
 import { ARTWORKS_DATA } from '../data/mockData';
 import { Artwork } from '../types';
 import { NirvanaPhoenix } from './NirvanaPhoenix';
+import { LoadingImage } from './LoadingImage';
 
 interface VisualOutputSectionProps {
   highlightedImageId: string | null;
@@ -62,13 +63,11 @@ const OrbitArtwork: React.FC<OrbitArtworkProps> = ({ art, index, progress, highl
       style={reduceMotion ? { x: state.settleX, y: state.settleY, rotate: state.settleRotate, zIndex: 20 + index } : { x, y, rotate, scale, opacity, zIndex: 20 + index }}
     >
       <div className="group relative aspect-[1.12] overflow-hidden border border-white/20 bg-black shadow-[0_26px_66px_rgba(0,0,0,.42)]">
-        <motion.img
+        <LoadingImage
           src={art.imageUrl}
           alt=""
-          loading="lazy"
-          decoding="async"
-          fetchPriority="low"
-          className="absolute inset-0 h-full w-full object-cover object-center transition duration-700"
+          className="absolute inset-0"
+          imageClassName="h-full w-full object-cover object-center transition duration-700"
           style={{
             filter: isHighlighted ? 'none' : 'grayscale(1) contrast(1.08)',
             scale: reduceMotion ? 1.04 : imageScale,

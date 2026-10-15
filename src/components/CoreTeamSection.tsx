@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { CORE_TEAM_DATA } from '../data/mockData';
 import { CoreTeamMember } from '../types';
+import { ImageSkeleton, LoadingImage } from './LoadingImage';
 
 interface CoreTeamSectionProps {
   highlightedImageId: string | null;
@@ -50,13 +51,11 @@ const TeamCard: React.FC<TeamCardProps> = ({
         className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900"
       >
         {member.imageUrl ? (
-          <img
+          <LoadingImage
             src={member.imageUrl}
             alt={member.name}
-            loading="lazy"
-            decoding="async"
-            fetchPriority="low"
-            className={`h-full w-full object-cover ${member.imageUrl === '/krish-srk.jpeg' ? 'object-[center_25%]' : 'object-top'} transition-transform duration-700 ease-out group-hover:scale-[1.04]`}
+            className="absolute inset-0"
+            imageClassName={`h-full w-full object-cover ${member.imageUrl === '/krish-srk.jpeg' ? 'object-[center_25%]' : 'object-top'} transition-transform duration-700 ease-out group-hover:scale-[1.04]`}
             style={{
               filter: isHighlighted
                 ? 'none'
@@ -64,11 +63,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
             }}
           />
         ) : (
-          <div className="grid h-full place-items-center bg-neutral-900">
-            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-neutral-500">
-              Core Team
-            </span>
-          </div>
+          <ImageSkeleton className="bg-neutral-950" />
         )}
 
         {/* Index badge */}

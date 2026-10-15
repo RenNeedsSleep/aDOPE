@@ -86,6 +86,26 @@
   100% { transform: translate(0); }
 }
 
+@keyframes loading-progress {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(410%); }
+}
+
+.image-skeleton-shimmer {
+  animation: image-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes image-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -120% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-skeleton-shimmer {
+    animation: none;
+  }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -129,4 +149,3 @@
   width: 300%;
   padding-top: 300%;
 }
-
