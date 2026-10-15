@@ -6,18 +6,47 @@ import { LoadingImage } from './LoadingImage';
 
 const PIXEL_TILE_COUNT = 12 * 8;
 const PIXEL_COLUMN_COUNT = 12;
+const PIXEL_ROW_COUNT = 8;
+
+const createRowRevealDelays = (): number[] => {
+  let seed = 0x4d474954;
+  const random = () => {
+    seed ^= seed << 13;
+    seed ^= seed >>> 17;
+    seed ^= seed << 5;
+    return (seed >>> 0) / 0x100000000;
+  };
+  const rowOrder = Array.from({ length: PIXEL_ROW_COUNT }, (_, row) => row);
+  for (let index = rowOrder.length - 1; index > 0; index--) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [rowOrder[index], rowOrder[swapIndex]] = [rowOrder[swapIndex], rowOrder[index]];
+  }
+
+  const delays = Array<number>(PIXEL_ROW_COUNT);
+  rowOrder.forEach((row, order) => {
+    delays[row] = order * 0.065 + random() * 0.025;
+  });
+  return delays;
+};
+
+const PIXEL_ROW_REVEAL_DELAYS = createRowRevealDelays();
 
 interface PixelTileProps {
   row: number;
+  column: number;
   revealStarted: boolean;
 }
 
-const PixelTile: React.FC<PixelTileProps> = ({ row, revealStarted }) => (
+const PixelTile: React.FC<PixelTileProps> = ({ row, column, revealStarted }) => (
   <motion.span
     className="border border-white/20 bg-white"
     initial={{ opacity: 1 }}
     animate={{ opacity: revealStarted ? 0 : 1 }}
-    transition={{ duration: 0.28, delay: row * 0.06, ease: 'easeOut' }}
+    transition={{
+      duration: 0.28,
+      delay: PIXEL_ROW_REVEAL_DELAYS[row] + column * 0.026 + ((row * column * 7) % 5) * 0.002,
+      ease: 'easeOut',
+    }}
   />
 );
 
@@ -197,10 +226,12 @@ export const MeetTeamSection: React.FC<MeetTeamSectionProps> = ({ highlightedIma
             >
               {Array.from({ length: PIXEL_TILE_COUNT }, (_, tileIndex) => {
                 const row = Math.floor(tileIndex / PIXEL_COLUMN_COUNT);
+                const column = tileIndex % PIXEL_COLUMN_COUNT;
                 return (
                   <PixelTile
                     key={tileIndex}
                     row={row}
+                    column={column}
                     revealStarted={revealStarted}
                   />
                 );
