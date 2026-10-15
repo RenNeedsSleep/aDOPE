@@ -63,7 +63,7 @@ export const AboutSection: React.FC = () => {
               viewport={vp}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              <h2 className="text-[clamp(2.4rem,5.6vw,5.5rem)] font-extrabold uppercase leading-[0.88] tracking-[-0.06em] text-white">
+              <h2 className="text-[clamp(1.8rem,8vw,5.5rem)] font-extrabold uppercase leading-[0.86] tracking-[-0.07em] text-white sm:text-[clamp(2.4rem,5.6vw,5.5rem)]">
                 Artists,<br />
                 Designers &amp;<br />
                 <span className="text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,.72)] sm:[-webkit-text-stroke:2px_rgba(255,255,255,.72)]">The Originals</span>

@@ -9,20 +9,6 @@ interface CoreTeamSectionProps {
   onImageLeave: (imageId: string) => void;
 }
 
-/**
- * Maps each member's image to its natural aspect ratio so frames
- * feel proportional rather than forcing every portrait into 4:3.
- * Measured from actual files in /public.
- */
-const NATURAL_RATIOS: Record<string, string> = {
-  '/krish-srk.jpeg': 'aspect-[9/16]',        // 720×1280 portrait
-  '/sohail.jpeg': 'aspect-[3/2]',             // 1280×853 landscape
-  '/secretary-siddhartha.jpeg': 'aspect-[3/2]',// 1280×854 landscape
-  '/akshit-bulusu.jpeg': 'aspect-[3/2]',      // 4080×2720 landscape
-  '/shyam-sunder-pabboju.png': 'aspect-square',// 640×640 square
-  '/sree-divya.png': 'aspect-square',          // 520×564 near-square
-};
-
 interface TeamCardProps {
   member: CoreTeamMember;
   index: number;
@@ -41,16 +27,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
   const reduceMotion = useReducedMotion();
   const imageId = `team-${member.id}`;
   const isHighlighted = highlightedImageId === imageId;
-  const aspectClass = member.imageUrl
-    ? NATURAL_RATIOS[member.imageUrl] || 'aspect-[4/3]'
-    : 'aspect-[4/3]';
 
   return (
     <motion.article
-      initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 32 }}
+      initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.55, delay: index * 0.07, ease: [0.16, 1, 0.3, 1] }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.38, delay: index * 0.04, ease: [0.16, 1, 0.3, 1] }}
       onPointerEnter={() =>
         window.matchMedia('(hover: hover)').matches && member.imageUrl && onImageEnter(imageId)
       }
@@ -60,17 +43,17 @@ const TeamCard: React.FC<TeamCardProps> = ({
       onClick={() =>
         window.matchMedia('(hover: none)').matches && member.imageUrl && onImageEnter(imageId)
       }
-      className="group relative flex flex-col rounded-xl border border-white/12 bg-neutral-950/80 shadow-[0_16px_44px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-white/40 hover:shadow-[0_24px_52px_rgba(255,255,255,0.04)] overflow-hidden"
+      className="group relative flex min-w-0 flex-col overflow-hidden border border-white/12 bg-neutral-950/80 shadow-[0_16px_44px_rgba(0,0,0,0.55)] transition-all duration-200 hover:border-white/40 hover:shadow-[0_24px_52px_rgba(255,255,255,0.04)]"
     >
       {/* Natural-ratio portrait frame */}
       <div
-        className={`relative w-full overflow-hidden bg-neutral-900 ${aspectClass}`}
+        className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900"
       >
         {member.imageUrl ? (
           <img
             src={member.imageUrl}
             alt={member.name}
-            className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            className={`h-full w-full object-cover ${member.imageUrl === '/krish-srk.jpeg' ? 'object-[center_25%]' : 'object-top'} transition-transform duration-700 ease-out group-hover:scale-[1.04]`}
             style={{
               filter: isHighlighted
                 ? 'none'
@@ -86,7 +69,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         )}
 
         {/* Index badge */}
-        <span className="absolute left-3 top-3 rounded-md border border-white/20 bg-black/65 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
+        <span className="absolute left-3 top-3 border border-white/20 bg-black/75 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
           {String(index + 1).padStart(2, '0')}
         </span>
 
@@ -123,7 +106,7 @@ export const CoreTeamSection: React.FC<CoreTeamSectionProps> = ({
   return (
     <section
       id="team"
-      className="relative z-20 border-b border-white/10 bg-black py-20 sm:py-28 md:py-32"
+      className="relative z-20 border-b border-white/10 bg-black py-12 sm:py-28 md:py-32"
     >
       <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 md:px-16">
         {/* Header */}
@@ -141,7 +124,7 @@ export const CoreTeamSection: React.FC<CoreTeamSectionProps> = ({
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ delay: 0.08 }}
+              transition={{ delay: 0.03 }}
               className="text-2xl font-extrabold uppercase tracking-[-0.06em] text-white sm:text-4xl md:text-5xl"
             >
               The people behind aDOPE
@@ -151,7 +134,7 @@ export const CoreTeamSection: React.FC<CoreTeamSectionProps> = ({
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ delay: 0.15 }}
+            transition={{ delay: 0.06 }}
             className="max-w-md text-xs leading-relaxed text-neutral-400 sm:text-sm"
           >
             The organisers, designers, and faculty mentors turning campus moments into lasting design work.
@@ -161,8 +144,8 @@ export const CoreTeamSection: React.FC<CoreTeamSectionProps> = ({
         {/* Divider */}
         <div className="mb-10 sm:mb-14 h-px bg-white/15" />
 
-        {/* Masonry-style grid using CSS columns for natural aspect ratios */}
-        <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 sm:gap-7 lg:gap-8 [&>*]:mb-6 sm:[&>*]:mb-7 lg:[&>*]:mb-8 [&>*]:break-inside-avoid">
+        {/* Row-first grid keeps the roster in reading order at every breakpoint. */}
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3 lg:gap-8">
           {teamMembers.map((member, index) => (
             <TeamCard
               key={member.id}

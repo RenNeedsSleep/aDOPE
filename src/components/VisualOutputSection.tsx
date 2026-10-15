@@ -20,6 +20,14 @@ const ORBIT_STATES = [
   { entryX: '2vw', entryY: '75vh', settleX: '2vw', settleY: '34vh', exitX: '3vw', exitY: '41vh', entryRotate: 9, settleRotate: 2, exitRotate: 4 },
 ];
 
+const DESIGN_TOOLS = [
+  { name: 'Photoshop', src: '/tools/photoshop.png' },
+  { name: 'Premiere Pro', src: '/tools/premiere.png' },
+  { name: 'DaVinci Resolve', src: '/tools/davinci.png' },
+  { name: 'Figma', src: '/tools/figma.png' },
+  { name: 'After Effects', src: '/tools/aftereffects.png' },
+];
+
 interface OrbitArtworkProps {
   art: Artwork;
   index: number;
@@ -103,6 +111,21 @@ export const VisualOutputSection: React.FC<VisualOutputSectionProps> = ({ highli
           <div>
             <span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.21em] text-neutral-400 sm:text-[10px]">05 // A living archive</span>
             <h2 className="text-[clamp(2.6rem,6.8vw,7.6rem)] font-extrabold uppercase leading-[0.82] tracking-[-0.06em] text-white">Design<br /><span className="text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,.72)] sm:[-webkit-text-stroke:2px_rgba(255,255,255,.72)]">Orbit</span></h2>
+            <div className="mt-3 flex items-center gap-2 sm:mt-4 sm:gap-2.5" aria-label="Design tools">
+              {DESIGN_TOOLS.map((tool) => (
+                <span
+                  key={tool.name}
+                  title={tool.name}
+                  className="flex h-8 w-8 items-center justify-center border border-white/15 bg-black/60 p-1.5 sm:h-9 sm:w-9"
+                >
+                  <img
+                    src={tool.src}
+                    alt={tool.name}
+                    className="h-full w-full object-contain grayscale"
+                  />
+                </span>
+              ))}
+            </div>
           </div>
           <div className="hidden max-w-[19rem] pt-2 text-right sm:block">
             <span className="font-mono text-[9px] uppercase leading-relaxed tracking-[0.17em] text-white/52">Each fragment follows its own route.<br />The Nirvana mark holds the system together.</span>

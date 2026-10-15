@@ -8,7 +8,7 @@ const MOBILE_VIDEO_SRC = '/intro-mobile.mp4';
 
 export const Hero: React.FC = () => {
   const [videoSrc, setVideoSrc] = useState(() => (
-    window.matchMedia('(pointer: coarse)').matches ? MOBILE_VIDEO_SRC : VIDEO_SRC
+    window.matchMedia('(max-width: 767px), (pointer: coarse)').matches ? MOBILE_VIDEO_SRC : VIDEO_SRC
   ));
   const [coords, setCoords] = useState({ x: '0.00', y: '100.00' });
   const [videoReady, setVideoReady] = useState(false);
@@ -26,16 +26,16 @@ export const Hero: React.FC = () => {
   const progressRef = useRef(0);
 
   useEffect(() => {
-    const pointerQuery = window.matchMedia('(pointer: coarse)');
+    const mobileQuery = window.matchMedia('(max-width: 767px), (pointer: coarse)');
     const updateVideoSource = () => {
-      const nextSource = pointerQuery.matches ? MOBILE_VIDEO_SRC : VIDEO_SRC;
+      const nextSource = mobileQuery.matches ? MOBILE_VIDEO_SRC : VIDEO_SRC;
       setVideoSrc(nextSource);
       setVideoReady(false);
       setVideoNeedsTap(false);
     };
 
-    pointerQuery.addEventListener('change', updateVideoSource);
-    return () => pointerQuery.removeEventListener('change', updateVideoSource);
+    mobileQuery.addEventListener('change', updateVideoSource);
+    return () => mobileQuery.removeEventListener('change', updateVideoSource);
   }, []);
 
   useEffect(() => {
@@ -180,7 +180,7 @@ export const Hero: React.FC = () => {
             {!videoFailed ? (
               <video
                 ref={videoRef}
-                className="w-full h-full object-contain md:object-cover"
+                className="w-full h-full object-cover"
                 src={videoSrc}
                 autoPlay
                 muted
